@@ -1,0 +1,38 @@
+        $('#file_upload').submit(function(event){
+
+            event.preventDefault();
+            var formData = new FormData($(this)[0]);
+            $.ajax({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content') },
+                url: $('#file_upload').attr('action'),
+                data: formData,
+                type: 'post',
+                cache: false,
+                xhr: function() {
+                    var xhr = new window.XMLHttpRequest();
+                    $("#csv_uploading").modal('show');
+                    xhr.upload.addEventListener("progress", function(evt) {
+                        if (evt.lengthComputable) {
+                            var percentComplete = evt.loaded / evt.total;
+                            percentComplete = parseInt(percentComplete * 100);
+                            $('.uploadProgressBar').attr('aria-valuenow',percentComplete).css('width',percentComplete + '%').text(percentComplete + '%');
+
+                        }
+                    }, false);
+
+                    return xhr;
+                },
+                processData: false,
+                contentType: false,
+
+                success:function(data){
+                    if(data.success === true){
+                        $("#csv_uploading").modal('hide');
+                        $("#submited_file").val(data.filename);
+                        $('<input />').attr('type', 'hidden') .attr('name', "filename") .attr('value', data.filename).appendTo('#fieldmapping');
+                        $('#fieldmapping').submit();
+                    }
+                }
+            });
+
+        });
